@@ -1,0 +1,9 @@
+proc:	httpd	1	300
+memcache:	11211
+mysql:	3306	master
+mysql:	3307	slave
+redis:	9741	master	[password]
+redis:	9742	slave	[password]
+web:	http://www.yolu.com
+web:	http://renmai.cn
+
