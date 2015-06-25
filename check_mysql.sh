@@ -10,13 +10,7 @@ cwdir=`dirname $0`
 mysql_cli=$(which mysql 2> /dev/null)
 mysql_cli=${mysql_cli:-/opt/mysql/bin/mysql}
 mysql_cli=${mysql_cli:-/usr/local/mysql/bin/mysql}
-
-if [ ! -z "$2" ];then
-    port=$2
-else
-    port=3306
-fi
-
+port=${2:-3306}
 tmpfile=$tmp_dir/.$(str_md5 ${port}.mysql).zbx
 
 if [ -f $check_list ];then

@@ -3,101 +3,40 @@
 # Author: Guanghongwei
 # Email: ibuler@qq.com
 
-. /etc/profile
-. /etc/bashrc
+cwdir=`dirname $0`
+. $cwdir/function.sh
 
 redis_cli=$(which redis-cli 2> /dev/null)
 redis_cli=${redis_cli:=/opt/redis/bin/redis-cli}
-cwdir=`dirname $0`
-check_list=${cwdir}/check_list.txt
-
-if [ ! -z "$2" ];then
-    port=$2
-else
-    port=6379
-fi
+port=${2:-6379}
+redis_pwd_default=guanghongwei
 
 if [ -f $check_list ];then
-    pwd=$(grep $port $check_list | awk '{ print $4 }')
+    redis_pwd=$(grep $port $check_list | awk '{ print $4 }')
 fi
-pwd=${pwd:=guanghongwei}
 
-redis_cli="${redis_cli} -a $pwd -p $port"
-
-low_case() {
-  echo $1 | tr [A-Z] [a-z]
-}
-
-str_md5() {
-  echo $1 | md5sum | awk '{ print $1 }'
-}
-
-json_null() {
-    printf '{\n'
-    printf '\t"data":[\n'
-    printf  "\t\t{ \n"
-    printf  "\t\t\t\"{#PORT}\":\"NULL\"}]}\n"
-}
-
-tmpfile=/tmp/.$(str_md5 ${port}.redis).zbx
+redis_pwd=${redis_pwd:-$redis_pwd_default}
+redis_cli="${redis_cli} -a $redis_pwd -p $port"
+tmpfile=$tmp_dir/.$(str_md5 ${port}.redis).zbx
 
 slave_discovery() {
-    if [ ! -f "$check_list" ];then
-        json_null
-        exit 1
-    fi
-
     ports=($(grep -v "^#" $check_list | grep '^redis:' | grep 'slave' | awk '{ print $2 }'))
-    if [ ${#ports[@]} -eq 0 ];then
-        json_null
-        exit 1
-    fi
-    printf '{\n'
-    printf '\t"data":[\n'
-    for((i=0;i<${#ports[@]};++i)) {
-        num=$(echo $((${#ports[@]}-1)))
-        if [ "$i" != "${num}" ]; then
-            printf "\t\t{ \n"
-            printf "\t\t\t\"{#PORT}\":\"${ports[$i]}\"},\n"
-        else
-            printf  "\t\t{ \n"
-            printf  "\t\t\t\"{#PORT}\":\"${ports[$num]}\"}]}\n"
-        fi
-    }
+    discovery ${ports[@]}
 }
 
 redis_discovery() {
-    if [ ! -f "$check_list" ];then
-        json_null
-        exit 1
-    fi
-
     ports=($(grep -v "^#" $check_list | grep "^redis:" | awk '{ print $2 }'))
-    if [ ${#ports[@]} -eq 0 ];then
-        json_null
-        exit 1
-    fi
-    printf '{\n'
-    printf '\t"data":[\n'
-    for((i=0;i<${#ports[@]};++i)) {
-        num=$(echo $((${#ports[@]}-1)))
-        if [ "$i" != "${num}" ]; then
-            printf "\t\t{ \n"
-            printf "\t\t\t\"{#PORT}\":\"${ports[$i]}\"},\n"
-        else
-            printf  "\t\t{ \n"
-            printf  "\t\t\t\"{#PORT}\":\"${ports[$num]}\"}]}\n"
-        fi
-    }
+    discovery ${ports[@]}
 }
 
 redis_ping() {
     error=''
-    role=$(grep ^$port $check_list | awk '{ print $3 }')
-    role=$(low_case ${role:=slave})
+    role=$(grep ^redis: $check_list | grep $port | awk '{ print $3 }')
+    role=$(low_case ${role:-slave})
     $redis_cli ping 2> /dev/null | grep -i 'PONG' &> /dev/null || error='1'
     if [ "$role" == 'master' ];then
         $redis_cli set zbx_ping OK 2> /dev/null | grep -i 'OK' &> /dev/null || error='2'
+        $redis_cli expire zbx_ping 60 &> /dev/null
         $redis_cli get zbx_ping 2> /dev/null | grep -i 'OK' &> /dev/null || error='3'
     fi
 
@@ -106,14 +45,7 @@ redis_ping() {
     else
         echo 0
     fi
-}
-
-redis_uptime() {
-    $redis_cli info 2> /dev/null | tee $tmpfile | grep uptime_in_seconds | awk -F: '{ print $2 }' || echo 0
-}
-
-tmpfile_md5() {
-    /usr/bin/md5sum $tmpfile 2> /dev/null | awk '{ print $1 }' || echo "9741"
+    $redis_cli info 2> /dev/null > $tmpfile
 }
 
 redis_perf() {
@@ -144,9 +76,6 @@ slave_discovery)
 ping)
     redis_ping
     ;;
-uptime)
-    redis_uptime
-    ;;
 tmpfile_md5)
     tmpfile_md5
     ;;
@@ -164,8 +93,7 @@ conf)
     fi
     ;;
 *)
-
-    usage="Usage: $0 discovery | ping | uptime | tmpfile_md5 | dbsize | conf port option | perf port option "
-    echo $usage
+    msg="Usage: $0 discovery | ping | tmpfile_md5 | dbsize | conf port option | perf port option "
+    echo $msg
     ;;
 esac
