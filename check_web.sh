@@ -7,7 +7,7 @@ cwdir=`dirname $0`
 . $cwdir/function.sh
 
 url=${2:-www.baidu.com}
-tmpfile=$tmp_dir/$(str_md5 $sitename).zbx
+tmpfile=$tmp_dir/.$(str_md5 $url).zbx
 
 website_discovery () { 
     urls=($(grep -v "^#" $check_list | grep '^web:' | awk '{ print $2 }' )) 
@@ -15,7 +15,7 @@ website_discovery () {
 }
 
 web_code() {
-    echo `/usr/bin/curl  -m 10 -o /dev/null -s -w %{http_code}::%{time_namelookup}::%{time_connect}::%{time_starttransfer}::%{time_total}::%{speed_download} $1` | tee $tmpfile | awk -F'::' '{ print $1 }'
+    echo `/usr/bin/curl -m 10 -o /dev/null -s -w %{http_code}::%{time_namelookup}::%{time_connect}::%{time_starttransfer}::%{time_total}::%{speed_download} $1` | tee $tmpfile | awk -F'::' '{ print $1 }'
 }
 
 case "$1" in 

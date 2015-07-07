@@ -4,6 +4,6 @@ mysql:	3306	master	[user]	[password]
 mysql:	3307	slave	[user]	[password]
 redis:	9741	master	[password]
 redis:	9742	slave	[password]
-web:	http://www.yolu.com
-web:	http://renmai.cn
+web:	http://www.baidu.com
+web:	http://www.qq.cn
 
