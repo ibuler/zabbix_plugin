@@ -64,6 +64,22 @@ slave_status() {
         
 }
 
+read_behind_master() {
+        master_host=`mysql_perf 'Master_Host'`
+        master_port=`mysql_perf 'Master_Port'`
+	mysql_ping &> /dev/null &&  ${mysql_cli} -h$master_host -P$master_port -e 'show master status\G' 2> /dev/null >> $tmpfile || echo "NULL"
+        master_file=`mysql_perf 'File'`
+	master_file_pos=`mysql_perf 'Position'`
+        read_file=`mysql_perf 'Master_Log_File'`
+	read_file_pos=`mysql_perf 'Read_Master_Log_Pos'`
+        
+        if [ $master_file != $read_file ];then
+            echo 99999 && exit 0
+        else
+            echo $(( $master_file_pos - $read_file_pos ))
+        fi
+}
+
 
 case $1 in
     discovery)
@@ -81,6 +97,9 @@ case $1 in
     tmpfile_md5)
         tmpfile_md5
         ;;
+    read_behind)
+        read_behind_master
+        ;;
     perf)
         if [ -z "$3" ];then
             echo "NULL"
@@ -89,7 +108,7 @@ case $1 in
         fi
         ;;
     *)
-        msg="Usage: $0 discovery | slave_discovery | ping | slave_status | tmpfile_md5 | perf  port [options]"
+        msg="Usage: $0 discovery | slave_discovery | ping | slave_status | read_behind | tmpfile_md5 | perf  port [options]"
         echo $msg
         ;;
 esac
