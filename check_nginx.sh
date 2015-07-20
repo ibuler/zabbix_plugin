@@ -46,6 +46,6 @@ tmpfile_md5)
     tmpfile_md5
     ;;
 *) 
-    echo "Usage:$0 {code | server | accepts | handled | requests | reading | writing | waiting | tmpfile_md5 [URL]}" 
+    echo "Usage:$0 {code | active | server | accepts | handled | requests | reading | writing | waiting | tmpfile_md5 [URL]}" 
 ;; 
 esac
