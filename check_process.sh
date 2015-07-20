@@ -24,7 +24,7 @@ proc_status() {
     min_num=$(grep $proc $check_list | grep "^proc" | awk '{ print $3 }')
     max_num=$(grep $proc $check_list | grep "^proc" | awk '{ print $4 }')
     min_num=${min_num:=$min_num_default}
-    max_num=${max_num:=$min_num_default}
+    max_num=${max_num:=$max_num_default}
     cur_num=$(proc_num $proc)
 
     if [ "$cur_num" -ge "$min_num" -a "$cur_num" -le "$max_num" ];then
