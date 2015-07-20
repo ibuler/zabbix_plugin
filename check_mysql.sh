@@ -74,7 +74,7 @@ read_behind_master() {
 	read_file_pos=`mysql_perf 'Read_Master_Log_Pos'`
         
         if [ $master_file != $read_file ];then
-            echo 99999 && exit 0
+            echo $master_file_pos
         else
             echo $(( $master_file_pos - $read_file_pos ))
         fi
