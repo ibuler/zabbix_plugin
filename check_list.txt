@@ -1,5 +1,1 @@
-proc:	httpd
-memcache:	11211
-mysql:	3306	master
-redis:	6379	master	[password]
-web:	http://www.baidu.com
+# view example.txt and write
