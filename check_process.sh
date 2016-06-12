@@ -21,8 +21,8 @@ proc_num() {
 
 proc_status() {
     proc=$1
-    min_num=$(grep $proc $check_list | grep "^proc" | awk '{ print $3 }')
-    max_num=$(grep $proc $check_list | grep "^proc" | awk '{ print $4 }')
+    min_num=$(grep "^proc: $proc" $check_list | awk '{ print $3 }')
+    max_num=$(grep "^proc: $proc" $check_list | awk '{ print $4 }')
     min_num=${min_num:=$min_num_default}
     max_num=${max_num:=$max_num_default}
     cur_num=$(proc_num $proc)
